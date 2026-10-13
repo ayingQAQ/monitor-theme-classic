@@ -145,6 +145,10 @@ test("themed view menu supports touch keyboard dismissal and stored selection", 
   await page.goto("/demo.html");
   await page.locator("#view-select").click();
   await expect(page.getByRole("listbox", { name: "卡片视图" })).toBeVisible();
+  const triggerBox = (await page.locator("#view-select").boundingBox())!;
+  const menuBox = (await page.locator("#view-options").boundingBox())!;
+  expect(Math.abs(menuBox.x - triggerBox.x)).toBeLessThanOrEqual(1);
+  expect(Math.abs(menuBox.width - triggerBox.width)).toBeLessThanOrEqual(1);
   await expect(page.getByRole("option")).toHaveCount(2);
   await expect(
     page.getByRole("option", { name: "卡片视图", exact: true }),

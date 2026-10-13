@@ -2343,10 +2343,11 @@ button:disabled {
 }
 .view-options {
   position: absolute;
+  left: 0;
   right: 0;
   top: calc(100% + 2px);
-  width: 140px;
-  min-width: 100%;
+  width: 100%;
+  min-width: 0;
   z-index: 80;
   background: var(--face);
   padding: 3px;
