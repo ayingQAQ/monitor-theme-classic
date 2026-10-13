@@ -1,5 +1,29 @@
+/* Local Latin faces avoid Windows font linking choosing an unrelated CJK face. */
+@font-face {
+  font-family: "Classic UI Latin";
+  src: local("Tahoma");
+  font-weight: 400;
+  unicode-range: U+0000-024F, U+2000-206F;
+}
+@font-face {
+  font-family: "Classic UI Latin";
+  src: local("Tahoma Bold");
+  font-weight: 700;
+  unicode-range: U+0000-024F, U+2000-206F;
+}
+@font-face {
+  font-family: "Classic Console Latin";
+  src:
+    local("Consolas"), local("Lucida Console"), local("SFMono-Regular"),
+    local("Liberation Mono");
+  font-weight: 400;
+  unicode-range: U+0000-024F, U+2000-206F;
+}
 :root {
-  font-family: Tahoma, "Microsoft YaHei UI", "Microsoft YaHei", sans-serif;
+  --font-ui:
+    "Classic UI Latin", "Microsoft YaHei UI", "Microsoft YaHei", "PingFang SC",
+    "Noto Sans CJK SC", sans-serif;
+  font-family: var(--font-ui);
   font-size: 13px;
   color: #20242b;
   background: #899a9a;
@@ -9,7 +33,9 @@
   --blue: #0a246a;
   --edge: #827f78;
   --green: #178249;
-  --mono: "Lucida Console", Consolas, monospace;
+  --mono:
+    "Classic Console Latin", "Microsoft YaHei UI", "Microsoft YaHei",
+    "PingFang SC", "Noto Sans CJK SC", monospace;
 }
 * {
   box-sizing: border-box;
@@ -93,7 +119,7 @@ button:disabled {
 }
 .desktop-heading h1 {
   font-size: 22px;
-  letter-spacing: 1px;
+  letter-spacing: 0.3px;
   margin: 4px 0 0;
   font-weight: 700;
   white-space: nowrap;
@@ -177,7 +203,7 @@ button:disabled {
   border: 1px solid;
   border-color: #fff #555 #555 #fff;
   box-shadow: inset -1px -1px #8a8780;
-  font-family: Tahoma, sans-serif;
+  font-family: var(--font-ui);
   font-size: 15px;
   font-weight: bold;
 }
@@ -682,6 +708,7 @@ button:disabled {
   color: #4c514f;
 }
 .meter-number {
+  min-width: 0;
   font: 11px var(--mono);
   white-space: nowrap;
   text-align: right;
@@ -1681,8 +1708,11 @@ button:disabled {
   .desktop-heading h1 {
     font-size: 19px;
   }
-  .desktop-actions .admin-link {
+  .desktop-actions .header-refresh {
     display: none;
+  }
+  .desktop-actions .admin-link {
+    display: inline-flex;
   }
   .content-toolbar {
     min-height: 72px;
@@ -2306,6 +2336,26 @@ button:disabled {
   transform: translate(1px, 1px);
 }
 /* Keep three columns, but make the text legible instead of tiny console labels. */
+.node-window .meter-row {
+  grid-template-columns: 52px 70px minmax(20px, 1fr);
+}
+.meter-number,
+.fact strong,
+.traffic-value,
+.overview-strip strong,
+.graph-caption > span:last-child,
+.graph-time,
+.graph-scale,
+.properties dd {
+  font-variant-numeric: tabular-nums lining-nums;
+  letter-spacing: 0;
+}
+.node-window .country-label,
+.node-window .node-note,
+.node-window .node-footer,
+.node-window .fact > span:first-child {
+  color: #60645f;
+}
 .node-window .node-title {
   font-size: 19px;
 }
@@ -2343,6 +2393,9 @@ button:disabled {
   height: 16px;
 }
 @media (max-width: 700px) {
+  .node-window .meter-row {
+    grid-template-columns: 52px 58px minmax(20px, 1fr);
+  }
   .node-window .node-title {
     font-size: 15px;
   }

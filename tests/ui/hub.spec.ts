@@ -483,7 +483,18 @@ for (const layout of ["desktop", "compact", "mobile"]) {
     await expect(page.locator(".history-error")).toHaveCount(1);
     const failed = (await page.locator(".node-window").boundingBox())!.height;
     options.historyError = false;
-    await page.getByRole("button", { name: "↻ 刷新", exact: true }).click();
+    if (layout === "mobile") {
+      await page.locator(".node-window").press("Enter");
+      await page
+        .getByRole("button", { name: "重试历史", exact: true })
+        .first()
+        .click();
+      await expect(page.locator(".detail-graph .graph-svg")).toHaveCount(1);
+      await page
+        .getByRole("button", { name: "← 返回节点列表", exact: true })
+        .click();
+    } else
+      await page.getByRole("button", { name: "↻ 刷新", exact: true }).click();
     await expect(page.locator(".node-window .graph")).toHaveCount(1);
     const loaded = (await page.locator(".node-window").boundingBox())!.height;
     expect(Math.abs(failed - loaded)).toBeLessThanOrEqual(1);

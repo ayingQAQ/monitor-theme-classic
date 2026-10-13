@@ -1,4 +1,58 @@
 import { test, expect } from "@playwright/test";
+test("mobile header replaces refresh with the Hub administration link", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 360, height: 800 });
+  await page.goto("/demo.html");
+  await expect(page.locator(".desktop-actions .admin-link")).toBeVisible();
+  await expect(
+    page.locator('.desktop-actions [data-action="refresh"]'),
+  ).toBeHidden();
+  await expect(page.locator(".desktop-actions .admin-link")).toHaveAttribute(
+    "href",
+    "/admin",
+  );
+  await page.route("**/admin", (route) =>
+    route.fulfill({
+      contentType: "text/html",
+      body: "<h1>Hub administration</h1>",
+    }),
+  );
+  await page.locator(".desktop-actions .admin-link").click();
+  await expect(
+    page.getByRole("heading", { name: "Hub administration" }),
+  ).toBeVisible();
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.goto("/demo.html");
+  await expect(page.locator(".desktop-actions .admin-link")).toBeVisible();
+  await expect(
+    page.locator('.desktop-actions [data-action="refresh"]'),
+  ).toBeVisible();
+});
+test("percentage typography leaves a clear gap before progress bars", async ({
+  page,
+}) => {
+  for (const width of [320, 700, 1280, 1920]) {
+    await page.setViewportSize({ width, height: 1000 });
+    await page.goto("/demo.html");
+    await page.evaluate(() => document.fonts.ready);
+    const gaps = await page
+      .locator(".node-window .meter-row")
+      .evaluateAll((rows) =>
+        rows.map((row) => {
+          const text = row.querySelector(".meter-number")!;
+          text.textContent = "100.0%";
+          const range = document.createRange();
+          range.selectNodeContents(text);
+          return (
+            row.querySelector(".meter-wrap")!.getBoundingClientRect().left -
+            range.getBoundingClientRect().right
+          );
+        }),
+      );
+    expect(Math.min(...gaps)).toBeGreaterThanOrEqual(2);
+  }
+});
 test("hiding restoring and filtering cards keeps their reused historical charts", async ({
   page,
 }) => {
