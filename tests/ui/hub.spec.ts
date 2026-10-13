@@ -128,6 +128,78 @@ test("network history errors remain visible with a retry action", async ({
       .first(),
   ).toBeVisible();
 });
+test("realtime updates reuse historical SVGs and refresh still replaces changed charts", async ({
+  page,
+}) => {
+  await page.addInitScript(() => {
+    const descriptor = Object.getOwnPropertyDescriptor(
+      Element.prototype,
+      "innerHTML",
+    )!;
+    (window as any).__svgMarkupWrites = 0;
+    Object.defineProperty(Element.prototype, "innerHTML", {
+      ...descriptor,
+      set(value) {
+        if (
+          this instanceof HTMLTemplateElement &&
+          String(value).includes("<svg")
+        )
+          (window as any).__svgMarkupWrites++;
+        descriptor.set!.call(this, value);
+      },
+    });
+  });
+  const backend = await hub(page);
+  await page.goto("/");
+  await expect(page.locator(".node-window .graph")).toHaveCount(1);
+  await expect(page.locator(".node-window")).toContainText("43 ms");
+  await page.evaluate(() => {
+    (window as any).__svgMarkupWrites = 0;
+  });
+  const chart = await page.locator(".node-window .graph-svg").elementHandle();
+  backend.socket()!.send(
+    JSON.stringify({
+      nodes: [{ ...node, metrics: { ...metrics, cpu: 82 } }],
+    }),
+  );
+  await expect(page.locator(".meter-number").first()).toHaveText("82%");
+  expect(await page.evaluate(() => (window as any).__svgMarkupWrites)).toBe(0);
+  expect(await chart!.evaluate((el) => el.isConnected)).toBe(true);
+  await page.route("**/api/nodes/1/metrics?**series=metrics", (route) =>
+    route.fulfill({ json: { metrics: [{ ts: 120, cpu: 99 }] } }),
+  );
+  await page.getByRole("button", { name: "↻ 刷新", exact: true }).click();
+  await expect(page.locator(".node-window .graph-caption")).toContainText(
+    "99.0%",
+  );
+  expect(
+    await page.evaluate(() => (window as any).__svgMarkupWrites),
+  ).toBeGreaterThan(0);
+});
+test("inserting a connection error keeps cached chart DOM while history refresh is pending", async ({
+  page,
+}) => {
+  const options: Parameters<typeof hub>[1] = {};
+  const backend = await hub(page, options);
+  try {
+    await page.goto("/");
+    await expect(page.locator(".node-window .graph-svg")).toHaveCount(1);
+    await expect(page.locator(".node-window")).toContainText("43 ms");
+    options.holdSeries = "metrics";
+    await page.route("**/api/nodes", (route) =>
+      route.fulfill({
+        status: 500,
+        contentType: "text/plain",
+        body: "暂时不可用",
+      }),
+    );
+    await page.getByRole("button", { name: "↻ 刷新", exact: true }).click();
+    await expect(page.locator(".error-banner")).toContainText("暂时不可用");
+    await expect(page.locator(".node-window .graph-svg")).toHaveCount(1);
+  } finally {
+    backend.releaseHeld();
+  }
+});
 async function hub(
   page: Page,
   options: {

@@ -296,6 +296,36 @@ function pingText(node: NodeInfo) {
     ? `${Math.round(cached.ping)} ms`
     : "N/A";
 }
+type StaticChart = {
+  key: string;
+  markup: string;
+  opening: string;
+  hours: number;
+  node: number;
+};
+const historicalCharts = new WeakMap<NodeHistory, StaticChart>();
+const demoCharts = new Map<string, StaticChart>();
+let chartRevision = 0;
+let existingCharts = new Set<string>();
+function cacheChart(markup: string, node: number): StaticChart {
+  const key = `chart-${node}-${++chartRevision}`;
+  const tagged = markup.replace(
+    '<div class="graph',
+    `<div data-static-key="${key}" class="graph`,
+  );
+  return {
+    key,
+    markup: tagged,
+    opening: tagged.slice(0, tagged.indexOf(">") + 1),
+    hours: historyHours,
+    node,
+  };
+}
+function reuseChart(chart: StaticChart): string {
+  return existingCharts.has(chart.key)
+    ? `${chart.opening}</div>`
+    : chart.markup;
+}
 function nodeChart(n: NodeInfo): string {
   if (!config.show_chart) return "";
   const cached = cachedHistory(n.id);
@@ -305,12 +335,39 @@ function nodeChart(n: NodeInfo): string {
     n.online &&
     nodeState(n) !== "invalid" &&
     nodeState(n) !== "pending"
-  )
-    return chartSvg(demoChart(n.id), label, 280, 90, { hours: historyHours });
+  ) {
+    const key = `${n.id}:${historyHours}`;
+    let chart = demoCharts.get(key);
+    if (!chart) {
+      chart = cacheChart(
+        chartSvg(demoChart(n.id), label, 280, 90, { hours: historyHours }),
+        n.id,
+      );
+      if (demoCharts.size >= 128)
+        demoCharts.delete(demoCharts.keys().next().value!);
+      demoCharts.set(key, chart);
+    }
+    return reuseChart(chart);
+  }
   if (!isDemo && !cached?.raw && !cached?.error)
     return `<div class="history-placeholder">${inFlight.has(`${historyKey(n.id)}:metrics`) ? "正在加载历史…" : "等待历史数据"}</div>`;
   if (cached?.error)
     return `<div class="history-placeholder history-error" title="${html(cached.error)}">历史暂不可用 · 点击查看详情</div>`;
+  if (cached?.raw) {
+    let chart = historicalCharts.get(cached.raw);
+    if (!chart || chart.hours !== historyHours || chart.node !== n.id) {
+      chart = cacheChart(
+        chartSvg(cached.data, label, 280, 90, {
+          hours: historyHours,
+          timestamps: cached.raw.metrics?.map((p) => p.ts),
+          step: cached.raw.step,
+        }),
+        n.id,
+      );
+      historicalCharts.set(cached.raw, chart);
+    }
+    return reuseChart(chart);
+  }
   return chartSvg(cached?.data ?? [], label, 280, 90, {
     hours: historyHours,
     timestamps: cached?.raw?.metrics?.map((p) => p.ts),
@@ -341,7 +398,7 @@ function nodeCard(n: NodeInfo) {
     ${
       isMin
         ? ""
-        : `<div class="node-body">
+        : `<div class="node-body" data-key="node-body-${n.id}">
       <div class="node-identity"><div class="identity-text"><strong>${html(locationName(n.country))}</strong><div class="country-label" title="${html(n.group || "未分组")}">${html(n.group || "未分组")} · #${String(n.id).padStart(2, "0")}</div></div><div class="online-label ${status}"><span class="status-dot ${status}"></span>${stateZh(status)}</div></div>
       <div class="node-note ${note ? "state-note" : ""}" title="${html(note || n.public_remark || "")}">${html(note || n.public_remark || "实时资源监控")}</div>
       <div class="bevel-line"></div>
@@ -610,7 +667,7 @@ function renderMain() {
           : `<div class="skeleton-grid" aria-label="正在加载节点">${Array.from({ length: 6 }, () => '<div class="skeleton-card"><div></div><span></span><span></span><span></span></div>').join("")}</div>`
         : !result.length
           ? `<div class="empty-state">${buttonIcon("folder")}<p>${a.length ? "没有匹配的节点" : "暂无节点"}</p><small>可以尝试切换分组、清空搜索，或恢复隐藏的卡片。</small><button class="classic-button" data-action="reset">显示全部节点</button></div>`
-          : `<div class="node-grid ${view === "compact" ? "compact-grid" : ""}" style="--cols:${config.columns}">${result.map((n) => `<div class="node-slot" data-key="node-slot-${n.id}">${nodeCard(n)}</div>`).join("")}</div>`
+          : `<div data-key="node-grid" class="node-grid ${view === "compact" ? "compact-grid" : ""}" style="--cols:${config.columns}">${result.map((n) => `<div class="node-slot" data-key="node-slot-${n.id}">${nodeCard(n)}</div>`).join("")}</div>`
     }
   </main>`;
 }
@@ -676,6 +733,11 @@ function scheduleRender() {
 function render() {
   if (pendingRender !== undefined) cancelAnimationFrame(pendingRender);
   pendingRender = undefined;
+  existingCharts = new Set(
+    Array.from(root.querySelectorAll<HTMLElement>("[data-static-key]")).map(
+      (el) => el.dataset.staticKey!,
+    ),
+  );
   // Re-rendering on each realtime frame must preserve the search caret and tree scroll position.
   const active = document.activeElement as HTMLInputElement | null;
   const keepSearch = active?.id === "search-box";

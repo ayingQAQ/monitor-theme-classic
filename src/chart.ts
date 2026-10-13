@@ -1,5 +1,12 @@
 import type { HistoryPoint } from "./types.js";
 import { html, valid } from "./format.js";
+const chartTimeFormatter = new Intl.DateTimeFormat("zh-CN", {
+  month: "2-digit",
+  day: "2-digit",
+  hour: "2-digit",
+  minute: "2-digit",
+  hour12: false,
+});
 export function chartSvg(
   points: Array<number | null>,
   label = "CPU（24小时）",
@@ -64,14 +71,12 @@ export function chartSvg(
     { length: 5 },
     (_, i) => `<path d="M0 ${((i * height) / 4).toFixed(1)}H${width}"/>`,
   ).join("");
-  const stamp = (ts: number) =>
-    new Date(ts * 1000).toLocaleString("zh-CN", {
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: false,
-    });
+  const stamp = (ts: number) => {
+    const date = new Date(ts * 1000);
+    return Number.isFinite(date.getTime())
+      ? chartTimeFormatter.format(date)
+      : "时间未知";
+  };
   const left =
     start !== undefined ? stamp(start) : `${options.hours ?? 24} 小时前`;
   const right = end !== undefined ? stamp(end) : "现在";

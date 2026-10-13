@@ -1,4 +1,18 @@
 import { test, expect } from "@playwright/test";
+test("hiding restoring and filtering cards keeps their reused historical charts", async ({
+  page,
+}) => {
+  await page.goto("/demo.html");
+  await expect(page.locator(".node-window .graph-svg")).toHaveCount(8);
+  await page.locator('[data-action="hide"]').first().click();
+  await expect(page.locator(".node-window .graph-svg")).toHaveCount(7);
+  await page.locator('[data-action="restore-all"]').click();
+  await expect(page.locator(".node-window .graph-svg")).toHaveCount(8);
+  await page.locator("#search-box").fill("Tokyo");
+  await expect(page.locator(".node-window .graph-svg")).toHaveCount(2);
+  await page.locator("#search-box").fill("");
+  await expect(page.locator(".node-window .graph-svg")).toHaveCount(8);
+});
 test("performance history uses three full-width rows", async ({ page }) => {
   await page.goto("/demo.html#/node/1");
   await page.getByRole("button", { name: "性能监视器", exact: true }).click();

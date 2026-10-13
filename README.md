@@ -2,7 +2,7 @@
 
 面向 [Monitor](https://github.com/monitor-probe/monitor) Hub 的独立中文主题，采用 Windows 95/2000 控制台风格：蓝色标题栏、立体边框、资源进度条、性能曲线与可折叠导航树。
 
-[下载 v1.0.4](https://github.com/ayingQAQ/monitor-theme-classic/releases/tag/v1.0.4) · [官方主题规范](https://monitor-document.pages.dev/dev/theme) · [主题收录要求](https://github.com/monitor-probe/themes#收录你的主题)
+[下载 v1.0.5](https://github.com/ayingQAQ/monitor-theme-classic/releases/tag/v1.0.5) · [官方主题规范](https://monitor-document.pages.dev/dev/theme) · [主题收录要求](https://github.com/monitor-probe/themes#收录你的主题)
 
 ![Monitor Classic 桌面预览，1920×1200](preview.png)
 
@@ -18,7 +18,7 @@ https://github.com/ayingQAQ/monitor-theme-classic
 
 页面入口为 `/`，节点详情为 `/#/node/{id}`，采用 hash 路由，不需要额外放行服务器路径；`/admin` 由 Hub 后台处理。
 
-- 主题名称：`Monitor Classic`；短名：`monitor-classic`；版本：`1.0.4`。
+- 主题名称：`Monitor Classic`；短名：`monitor-classic`；版本：`1.0.5`。
 - 后续更新从清单 `url` 指向的仓库读取最新正式 Release。
 - 开发阶段的 `x86-monitor` 使用不同短名，请安装新的 `monitor-classic`，不会自动覆盖旧主题。
 - 登录、节点管理和探测任务由 Hub 后台提供。
@@ -44,6 +44,7 @@ sha256sum -c theme.tar.gz.sha256
 - 三网延迟使用同一时间轴和毫秒刻度，显示最新延迟及查询范围丢包率。运营商按 Hub 的探测名称识别；需要配置对应电信、联通、移动探测，未配置时明确提示。
 - 文本/gzip WebSocket 串行解压、断线重连、轮询兜底，页面返回前台时恢复同步。
 - 实时更新保留滚动容器和卡片，历史查询最多四个独立并发请求；优先加载当前可见卡片，资源与延迟结果各自返回后立即显示。限流时自动短暂重试，刷新时保留已有曲线。
+- 历史未变化时复用已有 SVG；地区与时间格式器缓存复用，图表缓存使用弱引用或数量上限，减少重复计算和内存累积。
 - 离线、等待首次上报、指标异常、加载、无历史、请求失败分别显示；缺失数据用 `N/A`。
 - 剩余流量用额度减去 Hub 的计费用量 `month_used`，累计总流量取 Hub 累计接收与发送统计；支持不限量与超额状态。
 - 历史范围跟随 `history_days`，时间戳定位曲线，缺失区间保留断点。节点名称、备注、公告和探测名称安全转义。
@@ -56,7 +57,7 @@ sha256sum -c theme.tar.gz.sha256
 
 ## 发布与收录
 
-公开仓库根目录提供 MIT `LICENSE`；清单 `url` 指向本仓库；版本 `1.0.4` 对应 `v1.0.4` tag。正式 Release 附件为 `theme.tar.gz` 与 `theme.tar.gz.sha256`，包内含 `preview.png`。
+公开仓库根目录提供 MIT `LICENSE`；清单 `url` 指向本仓库；版本 `1.0.5` 对应 `v1.0.5` tag。正式 Release 附件为 `theme.tar.gz` 与 `theme.tar.gz.sha256`，包内含 `preview.png`。
 
 按 [主题列表 README](https://github.com/monitor-probe/themes#收录你的主题) 申请收录时，只在 `themes.txt` 末尾增加本仓库地址；名称、简介、作者、版本和截图从最新正式 Release 读取。官方 PR 检查会将包安装进最新版 Hub。
 

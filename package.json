@@ -1,6 +1,6 @@
 {
   "name": "monitor-theme-classic",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "private": true,
   "type": "module",
   "description": "Classic Windows management console theme for Monitor Hub",
@@ -14,6 +14,7 @@
     "format": "prettier --write src tests scripts/*.mjs *.json *.html playwright.config.ts",
     "format:check": "prettier --check src tests scripts/*.mjs *.json *.html playwright.config.ts",
     "screenshots": "npm run build && node scripts/capture-previews.mjs",
+    "performance": "npm run build && node scripts/measure-performance.mjs",
     "pack": "npm run build && node scripts/python.mjs pack.py && node scripts/python.mjs verify_package.py",
     "verify-package": "node scripts/python.mjs verify_package.py"
   },

@@ -108,18 +108,24 @@ export function html(s: unknown): string {
       ] ?? c,
   );
 }
+let regionFormatter: Intl.DisplayNames | undefined;
+const regionLabels = new Map<string, string>();
 export function locationName(code?: string): string {
   if (!code) return "未知地区";
-  if (code.toUpperCase() === "TW") return "中国台湾";
-  if (code.toUpperCase() === "HK") return "中国香港";
+  const region = code.toUpperCase();
+  if (region === "TW") return "中国台湾";
+  if (region === "HK") return "中国香港";
+  const cached = regionLabels.get(region);
+  if (cached !== undefined) return cached;
   try {
-    return (
-      new Intl.DisplayNames(["zh-CN"], { type: "region" }).of(
-        code.toUpperCase(),
-      ) || code.toUpperCase()
-    );
+    regionFormatter ??= new Intl.DisplayNames(["zh-CN"], { type: "region" });
+    const label = regionFormatter.of(region) || region;
+    if (regionLabels.size >= 256)
+      regionLabels.delete(regionLabels.keys().next().value!);
+    regionLabels.set(region, label);
+    return label;
   } catch {
-    return code.toUpperCase();
+    return region;
   }
 }
 export const countryFlag = (code?: string): string =>

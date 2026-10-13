@@ -4,6 +4,7 @@ function key(node: Node): string | null {
   if (node.id) return `id:${node.id}`;
   for (const attr of [
     "data-key",
+    "data-static-key",
     "data-node",
     "data-scope",
     "data-tab",
@@ -22,7 +23,16 @@ function compatible(a: Node, b: Node): boolean {
       a.namespaceURI === b.namespaceURI)
   );
 }
+function kind(node: Node): string {
+  return `${node.nodeType}:${node.nodeName}:${node instanceof Element ? node.namespaceURI : ""}`;
+}
 function patch(current: Node, next: Node): void {
+  const staticMatch =
+    current instanceof Element &&
+    next instanceof Element &&
+    current.hasAttribute("data-static-key") &&
+    current.getAttribute("data-static-key") ===
+      next.getAttribute("data-static-key");
   if (current.isEqualNode(next)) return;
   if (!(current instanceof Element) || !(next instanceof Element)) {
     current.nodeValue = next.nodeValue;
@@ -33,7 +43,8 @@ function patch(current: Node, next: Node): void {
   for (const attr of Array.from(next.attributes))
     if (current.getAttribute(attr.name) !== attr.value)
       current.setAttribute(attr.name, attr.value);
-  reconcile(current, next);
+  // Matching keys are emitted only for immutable charts already in this DOM.
+  if (!staticMatch) reconcile(current, next);
   if (current instanceof HTMLInputElement && next instanceof HTMLInputElement) {
     if (current.value !== next.value) current.value = next.value;
     if (current.checked !== next.checked) current.checked = next.checked;
@@ -47,19 +58,23 @@ function patch(current: Node, next: Node): void {
 }
 function reconcile(parent: Node, next: Node): void {
   const unused = new Set(Array.from(parent.childNodes));
-  const keyed = new Map(
-    Array.from(unused)
-      .filter((n) => key(n) !== null)
-      .map((n) => [key(n), n]),
-  );
+  const keyed = new Map<string, ChildNode>();
+  const unkeyed = new Map<string, { nodes: ChildNode[]; index: number }>();
+  for (const node of unused) {
+    const id = key(node);
+    if (id !== null) keyed.set(id, node);
+    else {
+      const type = kind(node);
+      let queue = unkeyed.get(type);
+      if (!queue) unkeyed.set(type, (queue = { nodes: [], index: 0 }));
+      queue.nodes.push(node);
+    }
+  }
   let cursor = parent.firstChild;
   for (const desired of Array.from(next.childNodes)) {
     const id = key(desired);
-    let current = id
-      ? keyed.get(id)
-      : Array.from(unused).find(
-          (n) => key(n) === null && compatible(n, desired),
-        );
+    const queue = id ? undefined : unkeyed.get(kind(desired));
+    let current = id ? keyed.get(id) : queue?.nodes[queue.index++];
     if (current && (!unused.has(current) || !compatible(current, desired)))
       current = undefined;
     if (current) {

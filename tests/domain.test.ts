@@ -5,6 +5,10 @@ import { sanitizeNodes, getMe } from "../src/api.ts";
 import { chartSvg, chartFromHistory } from "../src/chart.ts";
 import { loadConfig, defaults } from "../src/config.ts";
 const base = { id: 1, name: "Node", online: true };
+test("historical timestamps outside Date's range do not crash chart rendering", () => {
+  const markup = chartSvg([20], "CPU", 280, 90, { timestamps: [1e100] });
+  assert.ok(markup.includes("时间未知"));
+});
 test("history uses sample timestamps and breaks missing aggregate intervals", () => {
   const chart = chartSvg([10, 20, 30], "CPU", 106, 90, {
     timestamps: [100, 110, 200],
