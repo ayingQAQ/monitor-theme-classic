@@ -200,6 +200,30 @@ test("inserting a connection error keeps cached chart DOM while history refresh 
     backend.releaseHeld();
   }
 });
+test("live snapshots preserve focused options in the themed view picker", async ({
+  page,
+}) => {
+  const backend = await hub(page);
+  await page.goto("/");
+  await page.locator("#view-select").focus();
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("End");
+  await expect(
+    page.getByRole("option", { name: "紧凑卡片", exact: true }),
+  ).toBeFocused();
+  backend.socket()!.send(
+    JSON.stringify({
+      nodes: [{ ...node, metrics: { ...metrics, cpu: 82 } }],
+    }),
+  );
+  await expect(page.locator(".meter-number").first()).toHaveText("82%");
+  await expect(
+    page.getByRole("option", { name: "紧凑卡片", exact: true }),
+  ).toBeFocused();
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#view-select")).toContainText("紧凑卡片");
+  await expect(page.locator(".compact-grid")).toBeVisible();
+});
 async function hub(
   page: Page,
   options: {
@@ -478,8 +502,10 @@ for (const layout of ["desktop", "compact", "mobile"]) {
     const options = { historyError: true };
     await hub(page, options);
     await page.goto("/");
-    if (layout === "compact")
-      await page.locator("#view-select").selectOption("compact");
+    if (layout === "compact") {
+      await page.locator("#view-select").click();
+      await page.getByRole("option", { name: "紧凑卡片", exact: true }).click();
+    }
     await expect(page.locator(".history-error")).toHaveCount(1);
     const failed = (await page.locator(".node-window").boundingBox())!.height;
     options.historyError = false;

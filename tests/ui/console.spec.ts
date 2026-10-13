@@ -97,6 +97,14 @@ test("left icon controls navigation and expanded folders can collapse independen
   await page.setViewportSize({ width: 1280, height: 800 });
   await page.goto("/demo.html");
   await expect(page.locator(".view-square,.mobile-menu")).toHaveCount(0);
+  await expect(page.locator(".desktop-brand #navigation-toggle")).toHaveCount(
+    1,
+  );
+  await expect(
+    page.locator(
+      '.content-toolbar [data-action="toggle-sidebar"],.detail-toolbar [data-action="toggle-sidebar"]',
+    ),
+  ).toHaveCount(0);
   await expect(page.locator("#navigation-toggle")).toHaveAttribute(
     "aria-expanded",
     "true",
@@ -129,6 +137,41 @@ test("left icon controls navigation and expanded folders can collapse independen
   await page.locator('.node-window [data-action="detail"]').first().click();
   await page.locator("#navigation-toggle").click();
   await expect(page.locator(".sidebar")).toBeHidden();
+});
+test("themed view menu supports touch keyboard dismissal and stored selection", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 360, height: 800 });
+  await page.goto("/demo.html");
+  await page.locator("#view-select").click();
+  await expect(page.getByRole("listbox", { name: "卡片视图" })).toBeVisible();
+  await expect(page.getByRole("option")).toHaveCount(2);
+  await expect(
+    page.getByRole("option", { name: "卡片视图", exact: true }),
+  ).toBeFocused();
+  await page.keyboard.press("ArrowDown");
+  await page.keyboard.press("Enter");
+  await expect(page.locator("#view-select")).toContainText("紧凑卡片");
+  await expect(page.locator("#view-select")).toBeFocused();
+  await expect(page.getByRole("listbox")).toHaveCount(0);
+  await page.reload();
+  await expect(page.locator("#view-select")).toContainText("紧凑卡片");
+  await page.locator("#view-select").click();
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("listbox")).toHaveCount(0);
+  await expect(page.locator("#view-select")).toBeFocused();
+  await page.locator("#view-select").click();
+  await page.locator(".desktop-heading h1").click();
+  await expect(page.getByRole("listbox")).toHaveCount(0);
+  const paint = await page
+    .locator('.window-actions [data-action="detail"]')
+    .first()
+    .evaluate((el) => ({
+      height: el.getBoundingClientRect().height,
+      inset: getComputedStyle(el, "::before").top,
+    }));
+  expect(paint.height).toBeGreaterThanOrEqual(28);
+  expect(paint.inset).toBe("3px");
 });
 test("desktop displays three cards per row with the same proportions across widths", async ({
   page,
@@ -226,7 +269,7 @@ test("dialog retains control focus and restores opener after close", async ({
   await page.keyboard.press("Escape");
   await expect(page.locator('[data-modal="settings"]')).toBeFocused();
   await page.reload();
-  await expect(page.locator("#view-select")).toHaveValue("compact");
+  await expect(page.locator("#view-select")).toContainText("紧凑卡片");
 });
 
 test("back from properties restores the list scroll position and focused card", async ({

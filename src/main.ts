@@ -61,6 +61,7 @@ let me: Me = {};
 let scope = "all";
 let search = "";
 let view: "cards" | "compact" = "cards";
+let viewMenuOpen = false;
 let sidebarOpen = window.innerWidth > 700;
 let preferredSidebar: boolean | undefined;
 const collapsedTrees = new Set<string>();
@@ -69,7 +70,13 @@ function treeHeading(id: string, label: string, icon: string) {
 }
 function navigationToggle() {
   const expanded = sidebarOpen && (preferredSidebar ?? config.show_sidebar);
-  return `<button type="button" id="navigation-toggle" class="classic-button navigation-toggle" data-action="toggle-sidebar" aria-label="${expanded ? "收起" : "展开"}节点管理器" aria-expanded="${expanded}" title="${expanded ? "收起" : "展开"}节点管理器">${buttonIcon("computer")}</button>`;
+  return `<button type="button" id="navigation-toggle" class="navigation-toggle brand-toggle" data-action="toggle-sidebar" aria-label="${expanded ? "收起" : "展开"}节点管理器" aria-expanded="${expanded}" aria-controls="node-sidebar" title="${expanded ? "收起" : "展开"}节点管理器"><img src="/favicon.svg" alt="" /></button>`;
+}
+function scopeIcon() {
+  return `<span class="scope-icon" aria-hidden="true">${buttonIcon("computer")}</span>`;
+}
+function viewPicker() {
+  return `<div class="view-control"><button type="button" id="view-select" class="view-select" data-action="toggle-view" aria-label="卡片视图" aria-haspopup="listbox" aria-expanded="${viewMenuOpen}" aria-controls="view-options">${view === "cards" ? "卡片视图" : "紧凑卡片"}</button>${viewMenuOpen ? `<div id="view-options" class="view-options" role="listbox" aria-label="卡片视图">${(["cards", "compact"] as const).map((value) => `<button type="button" id="view-option-${value}" role="option" aria-selected="${view === value}" tabindex="${view === value ? 0 : -1}" data-action="choose-view" data-value="${value}">${value === "cards" ? "卡片视图" : "紧凑卡片"}</button>`).join("")}</div>` : ""}</div>`;
 }
 try {
   const prefs = JSON.parse(
@@ -245,7 +252,7 @@ function renderSidebar() {
   if (!(preferredSidebar ?? config.show_sidebar)) return "";
   const a = nodes || [];
   const n = counts();
-  return `<aside class="sidebar ${!sidebarOpen ? "sidebar-closed" : ""}" aria-label="节点导航">
+  return `<aside id="node-sidebar" class="sidebar ${!sidebarOpen ? "sidebar-closed" : ""}" aria-label="节点导航">
     <div class="sidebar-title classic-title"><span>${html(config.site_label || "节点管理器")}</span><button data-action="collapse-sidebar" aria-label="折叠导航" class="title-btn">${sidebarOpen ? "−" : "+"}</button></div>
     <div class="tree-scroll"><div class="tree-group">
     ${treeHeading("nodes", "节点", buttonIcon("computer"))}<div id="tree-children-nodes" ${collapsedTrees.has("nodes") ? "hidden" : ""}>
@@ -391,9 +398,9 @@ function nodeCard(n: NodeInfo) {
   const expires = expDays(n);
   return `<article class="node-window ${status === "offline" ? "card-offline" : ""} ${view === "compact" ? "card-compact" : ""}" data-node="${n.id}" tabindex="0" aria-label="查看 ${html(n.name)} 的节点详情">
     <div class="node-title classic-title"><span class="tiny-pc">${flagImage(n.country, "title-flag")}</span><span class="truncate" title="${html(n.name)}">${html(n.name)}</span><div class="window-actions">
-      <button class="title-btn" data-action="min" data-id="${n.id}" title="${isMin ? "还原" : "最小化"}" aria-label="${isMin ? "还原" : "最小化"} ${html(n.name)}">${isMin ? "□" : "−"}</button>
-      <button class="title-btn" data-action="detail" data-id="${n.id}" title="查看节点详情" aria-label="查看 ${html(n.name)} 详情">□</button>
-      <button class="title-btn" data-action="hide" data-id="${n.id}" title="隐藏卡片" aria-label="隐藏 ${html(n.name)}">×</button>
+      <button class="title-btn" data-action="min" data-id="${n.id}" title="${isMin ? "还原" : "最小化"}" aria-label="${isMin ? "还原" : "最小化"} ${html(n.name)}"><span class="window-glyph ${isMin ? "glyph-restore" : "glyph-min"}" aria-hidden="true"></span></button>
+      <button class="title-btn" data-action="detail" data-id="${n.id}" title="查看节点详情" aria-label="查看 ${html(n.name)} 详情"><span class="window-glyph glyph-max" aria-hidden="true"></span></button>
+      <button class="title-btn" data-action="hide" data-id="${n.id}" title="隐藏卡片" aria-label="隐藏 ${html(n.name)}"><span class="window-glyph glyph-close" aria-hidden="true"></span></button>
     </div></div>
     ${
       isMin
@@ -628,7 +635,7 @@ function renderNodePage(node: NodeInfo | undefined, id: number): string {
   } else {
     content = `${detailPanel("系统和硬件", grouped(["操作系统", node.os || "未提供"], ["主机名", node.hostname || "未提供"], ["内核", node.kernel || "未提供"], ["系统架构", node.arch || "未提供"], ["虚拟化", node.virt || "未提供"], ["CPU 型号", node.cpu_name || "未提供"], ["CPU 核心", node.cpu_cores ?? "未提供"], ["内存总量", bytes(m?.mem_total ?? node.mem_total)], ["硬盘总量", bytes(m?.disk_total ?? node.disk_total)], ["网络地址", node.ip || "未公开"], ["到期剩余天数", expDays(node) === null ? "未设置" : `${expDays(node)} 天`], ["公开备注", node.public_remark || "—"]))}`;
   }
-  return `<main class="content node-page" id="main-content" tabindex="-1"><div class="detail-toolbar classic-title">${navigationToggle()}${flagImage(node.country, "title-flag")}<span>${html(node.name)} · 属性</span><button class="title-btn" data-action="back" title="返回节点列表" aria-label="返回节点列表">×</button></div>
+  return `<main class="content node-page" id="main-content" tabindex="-1"><div class="detail-toolbar classic-title">${scopeIcon()}${flagImage(node.country, "title-flag")}<span>${html(node.name)} · 属性</span><button class="title-btn" data-action="back" title="返回节点列表" aria-label="返回节点列表">×</button></div>
     <div class="detail-inner"><div class="detail-navigation"><button class="classic-button" data-action="back">← 返回节点列表</button><span>节点属性 / ${html(node.name)}</span></div>
     <div class="detail-header">${flagImage(node.country, "detail-flag")}<div><h1>${html(node.name)}</h1><p><span class="status-dot ${st}"></span> ${stateZh(st)} · ${html(locationName(node.country))} · #${node.id}</p></div></div>
     ${error ? `<div class="error-banner" role="alert">${html(error)} <button data-action="refresh">重试</button></div>` : ""}
@@ -652,8 +659,8 @@ function renderMain() {
     );
   const result = visible(),
     a = nodes || [];
-  return `<main class="content" id="main-content" tabindex="-1"><div class="content-toolbar classic-title"><div class="toolbar-name">${navigationToggle()} <span>${html(scopeText())}（${result.length} 台）</span></div>
-    <div class="toolbar-right"><label class="toolbar-search" title="搜索节点"><span aria-hidden="true">⌕</span><input id="search-box" aria-label="搜索节点" placeholder="搜索名称、地区、分组" value="${html(search)}" /></label><label class="view-label" for="view-select">视图</label><select id="view-select" aria-label="卡片视图"><option value="cards" ${view === "cards" ? "selected" : ""}>卡片视图</option><option value="compact" ${view === "compact" ? "selected" : ""}>紧凑卡片</option></select>
+  return `<main class="content" id="main-content" tabindex="-1"><div class="content-toolbar classic-title"><div class="toolbar-name">${scopeIcon()} <span>${html(scopeText())}（${result.length} 台）</span></div>
+    <div class="toolbar-right"><label class="toolbar-search" title="搜索节点"><span aria-hidden="true">⌕</span><input id="search-box" aria-label="搜索节点" placeholder="搜索名称、地区、分组" value="${html(search)}" /></label><label class="view-label" for="view-select">视图</label>${viewPicker()}
     </div></div>
     ${isDemo ? '<div class="demo-banner" role="note"><strong>演示环境</strong><span>当前页面使用示例数据</span><a href="/">查看实时站点 ↗</a></div>' : ""}
     ${config.notice ? `<div class="notice" role="note"><strong>站点公告</strong> ${html(config.notice)}</div>` : ""}
@@ -770,7 +777,7 @@ function render() {
   previousRoute = routeKey;
   updateMarkup(
     root,
-    `<div class="desktop-shell ${!(preferredSidebar ?? config.show_sidebar) || !sidebarOpen ? "navigation-off" : ""}" ${modal ? "inert" : ""}><header class="desktop-heading"><div class="desktop-brand"><img src="/favicon.svg" alt="" /><div><span class="brand-kicker">MONITOR CLASSIC / SYSTEM CONSOLE</span><h1>${html(config.site_label || me.site_name || "节点管理器")}</h1></div></div><div class="desktop-actions"><span class="session-label"><span class="status-dot ${isDemo || connection === "Live" ? "online" : "offline"}"></span>${isDemo ? "演示环境" : connection === "Live" ? "实时监控" : "正在同步"}</span><button class="classic-button header-refresh" data-action="refresh">↻ 刷新</button><a class="classic-button admin-link" href="/admin">后台管理 ↗</a></div></header><div class="workarea">
+    `<div class="desktop-shell ${!(preferredSidebar ?? config.show_sidebar) || !sidebarOpen ? "navigation-off" : ""}" ${modal ? "inert" : ""}><header class="desktop-heading"><div class="desktop-brand">${navigationToggle()}<div><span class="brand-kicker">MONITOR CLASSIC / SYSTEM CONSOLE</span><h1>${html(config.site_label || me.site_name || "节点管理器")}</h1></div></div><div class="desktop-actions"><span class="session-label"><span class="status-dot ${isDemo || connection === "Live" ? "online" : "offline"}"></span>${isDemo ? "演示环境" : connection === "Live" ? "实时监控" : "正在同步"}</span><button class="classic-button header-refresh" data-action="refresh">↻ 刷新</button><a class="classic-button admin-link" href="/admin">后台管理 ↗</a></div></header><div class="workarea">
    ${renderSidebar()}<div class="main-column" data-key="main-column">${renderMain()}</div></div>${renderStatus()}</div>${renderModal()}`,
   );
   const tree = root.querySelector(".tree-scroll");
@@ -944,11 +951,6 @@ root.addEventListener("input", (event) => {
 });
 root.addEventListener("change", (event) => {
   const t = event.target as HTMLInputElement;
-  if (t.id === "view-select") {
-    view = t.value === "compact" ? "compact" : "cards";
-    savePreferences();
-    render();
-  }
   if (t.id === "pref-sidebar") {
     preferredSidebar = t.checked;
     savePreferences();
@@ -1013,6 +1015,23 @@ root.addEventListener("click", (event) => {
     return;
   const id = Number(action.dataset.id);
   switch (action.dataset.action) {
+    case "toggle-view":
+      viewMenuOpen = !viewMenuOpen;
+      render();
+      if (viewMenuOpen)
+        root
+          .querySelector<HTMLElement>(`#view-option-${view}`)
+          ?.focus({ preventScroll: true });
+      return;
+    case "choose-view":
+      view = action.dataset.value === "compact" ? "compact" : "cards";
+      viewMenuOpen = false;
+      savePreferences();
+      render();
+      root
+        .querySelector<HTMLElement>("#view-select")
+        ?.focus({ preventScroll: true });
+      return;
     case "min":
       minimized.has(id) ? minimized.delete(id) : minimized.add(id);
       break;
@@ -1083,6 +1102,48 @@ function closeModal() {
   )?.focus({ preventScroll: true });
 }
 document.addEventListener("keydown", (e) => {
+  if (
+    !viewMenuOpen &&
+    (e.target as Element)?.id === "view-select" &&
+    ["ArrowDown", "ArrowUp"].includes(e.key)
+  ) {
+    e.preventDefault();
+    viewMenuOpen = true;
+    render();
+    root
+      .querySelector<HTMLElement>(
+        `#view-option-${e.key === "ArrowUp" ? "compact" : view}`,
+      )
+      ?.focus({ preventScroll: true });
+    return;
+  }
+  if (viewMenuOpen && (e.target as Element)?.closest(".view-control")) {
+    const options = [
+      ...root.querySelectorAll<HTMLElement>('#view-options [role="option"]'),
+    ];
+    if (["ArrowDown", "ArrowUp", "Home", "End"].includes(e.key)) {
+      e.preventDefault();
+      const index = options.indexOf(document.activeElement as HTMLElement);
+      const next =
+        e.key === "Home"
+          ? 0
+          : e.key === "End"
+            ? options.length - 1
+            : (index + (e.key === "ArrowDown" ? 1 : -1) + options.length) %
+              options.length;
+      options[next]?.focus({ preventScroll: true });
+      return;
+    }
+    if (e.key === "Escape" || e.key === "Tab") {
+      if (e.key === "Escape") e.preventDefault();
+      viewMenuOpen = false;
+      render();
+      root
+        .querySelector<HTMLElement>("#view-select")
+        ?.focus({ preventScroll: true });
+      return;
+    }
+  }
   if (modal && e.key === "Tab") {
     const controls = [
       ...root.querySelectorAll<HTMLElement>(
@@ -1115,9 +1176,16 @@ document.addEventListener("keydown", (e) => {
   }
 });
 window.addEventListener("hashchange", () => {
+  viewMenuOpen = false;
   render();
   focusRoute();
   void loadVisibleHistories();
+});
+document.addEventListener("click", (e) => {
+  if (viewMenuOpen && !(e.target as Element)?.closest(".view-control")) {
+    viewMenuOpen = false;
+    render();
+  }
 });
 document.addEventListener("visibilitychange", () => {
   if (document.hidden) historyEpoch++;

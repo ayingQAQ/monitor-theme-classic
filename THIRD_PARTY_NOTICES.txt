@@ -1,4 +1,4 @@
-Monitor Classic 1.0.7 has no external JavaScript libraries, fonts or icon services at runtime.
+Monitor Classic 1.0.8 has no external JavaScript libraries, fonts or icon services at runtime.
 System fonts and platform emoji are supplied by the visitor's device.
 The interface, bundled SVG flags and charts are distributed under the repository MIT license.
 No Microsoft proprietary image assets are included.

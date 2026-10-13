@@ -2286,6 +2286,185 @@ button:disabled {
 .navigation-toggle .pixel-pc {
   margin: 0;
 }
+.brand-toggle {
+  width: 40px;
+  height: 40px;
+  min-height: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+}
+.brand-toggle img {
+  width: 36px;
+  height: 36px;
+  image-rendering: pixelated;
+}
+.brand-toggle:active img {
+  transform: translate(1px, 1px);
+}
+.scope-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  flex: none;
+}
+.scope-icon .pixel-pc {
+  margin: 0;
+}
+.scope-icon .pc-screen {
+  background: #3a99bc;
+}
+.view-control {
+  position: relative;
+  flex: none;
+}
+.view-select {
+  height: 32px;
+  min-width: 112px;
+  padding: 3px 29px 3px 9px;
+  text-align: left;
+  color: #20242b;
+  background: var(--face);
+  border: 1px solid;
+  border-color: #fff #64615c #64615c #fff;
+  box-shadow:
+    inset -1px -1px #929088,
+    inset 1px 1px #eeece6;
+}
+.view-select::after {
+  content: "";
+  position: absolute;
+  right: 7px;
+  top: 13px;
+  border: 4px solid transparent;
+  border-top-color: #20242b;
+}
+.view-options {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 2px);
+  width: 140px;
+  min-width: 100%;
+  z-index: 80;
+  background: var(--face);
+  padding: 3px;
+  border: 1px solid;
+  border-color: #fff #64615c #64615c #fff;
+  box-shadow:
+    inset -1px -1px #929088,
+    2px 3px #0004;
+}
+.view-options [role="option"] {
+  display: block;
+  width: 100%;
+  min-height: 32px;
+  border: 0;
+  padding: 5px 8px;
+  background: transparent;
+  color: #20242b;
+  text-align: left;
+}
+.view-options [role="option"]:hover,
+.view-options [role="option"]:focus-visible {
+  background: var(--blue);
+  color: #fff;
+  outline: 1px dotted #fff;
+  outline-offset: -3px;
+}
+.window-glyph {
+  position: relative;
+  width: 12px;
+  height: 12px;
+}
+.window-glyph::before,
+.window-glyph::after {
+  content: "";
+  position: absolute;
+}
+.glyph-min::before {
+  left: 2px;
+  bottom: 2px;
+  width: 8px;
+  height: 2px;
+  background: #111;
+}
+.glyph-max::before {
+  left: 2px;
+  top: 2px;
+  width: 8px;
+  height: 8px;
+  border: 1px solid #111;
+  border-top-width: 2px;
+}
+.glyph-close::before {
+  left: 1px;
+  top: 1px;
+  width: 2px;
+  height: 2px;
+  background: #111;
+  box-shadow:
+    2px 2px #111,
+    4px 4px #111,
+    6px 6px #111,
+    8px 8px #111,
+    8px 0 #111,
+    6px 2px #111,
+    2px 6px #111,
+    0 8px #111;
+}
+.glyph-restore::before {
+  left: 4px;
+  top: 1px;
+  width: 7px;
+  height: 7px;
+  border: 1px solid #111;
+  background: var(--face);
+}
+.glyph-restore::after {
+  left: 1px;
+  top: 4px;
+  width: 7px;
+  height: 7px;
+  border: 1px solid #111;
+  border-top-width: 2px;
+  background: var(--face);
+}
+@media (max-width: 700px) {
+  .brand-toggle {
+    width: 32px;
+    height: 34px;
+  }
+  .brand-toggle img {
+    width: 29px;
+    height: 29px;
+  }
+  .window-actions .title-btn {
+    position: relative;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+  }
+  .window-actions .title-btn::before {
+    content: "";
+    position: absolute;
+    inset: 3px;
+    background: var(--face);
+    border: 1px solid;
+    border-color: #fff #555 #555 #fff;
+    box-shadow: inset -1px -1px #8a8780;
+  }
+  .window-actions .title-btn:hover::before {
+    background: #eeeae2;
+  }
+  .window-actions .title-btn:active::before {
+    border-color: #555 #fff #fff #555;
+  }
+  .window-actions .title-btn:active .window-glyph {
+    transform: translate(1px, 1px);
+  }
+}
 .tree-folder-toggle {
   width: 100%;
   border: 0;
