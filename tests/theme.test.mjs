@@ -68,7 +68,7 @@ test("Simplified Chinese and local SVG flags included", () => {
   const js = readFileSync(resolve(root, jsFile), "utf8");
   for (const term of [
     "节点管理器",
-    "处理器",
+    "CPU",
     "内存",
     "硬盘",
     "在线",

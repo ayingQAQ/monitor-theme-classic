@@ -402,7 +402,7 @@ function nodeCard(n: NodeInfo) {
       <div class="node-identity"><div class="identity-text"><strong>${html(locationName(n.country))}</strong><div class="country-label" title="${html(n.group || "未分组")}">${html(n.group || "未分组")} · #${String(n.id).padStart(2, "0")}</div></div><div class="online-label ${status}"><span class="status-dot ${status}"></span>${stateZh(status)}</div></div>
       <div class="node-note ${note ? "state-note" : ""}" title="${html(note || n.public_remark || "")}">${html(note || n.public_remark || "实时资源监控")}</div>
       <div class="bevel-line"></div>
-      <div class="meters">${meter("处理器", cp)}${meter("内存", rm, valid(n.metrics?.mem_used) ? bytes(n.metrics!.mem_used) : undefined)}${meter("硬盘", dk)}${config.show_traffic ? trafficMeter(n) : ""}</div>
+      <div class="meters">${meter("CPU", cp)}${meter("内存", rm, valid(n.metrics?.mem_used) ? bytes(n.metrics!.mem_used) : undefined)}${meter("硬盘", dk)}${config.show_traffic ? trafficMeter(n) : ""}</div>
       ${nodeChart(n)}
       <div class="card-facts"><div class="fact"><span>延迟</span><strong>${pingText(n)}</strong></div><div class="fact"><span>运行时间</span><strong>${duration(n.metrics?.uptime)}</strong></div>
       ${config.show_traffic ? `<div class="fact net-fact"><span>网络</span><strong class="net-down">↓ ${speed(n.metrics?.net_rx)}</strong><strong class="net-up">↑ ${speed(n.metrics?.net_tx)}</strong></div>` : ""}</div>
