@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { readFileSync, existsSync, statSync } from "node:fs";
+import { readFileSync, existsSync, statSync, readdirSync } from "node:fs";
 import { resolve } from "node:path";
 const root = resolve(import.meta.dirname, "..");
 const manifest = JSON.parse(readFileSync(resolve(root, "theme.json"), "utf8"));
@@ -14,6 +14,41 @@ const findAsset = (kind, ext) => {
 };
 const jsFile = findAsset("main", "js");
 const cssFile = findAsset("styles", "css");
+const flagCodes = JSON.parse(
+  readFileSync(resolve(root, "src/flag-codes.json"), "utf8"),
+);
+
+test("All 249 ISO flags and additional codes ship locally with their license", () => {
+  assert.equal(flagCodes.iso.length, 249);
+  const codes = [...flagCodes.iso, ...flagCodes.extra].sort();
+  assert.equal(new Set(codes).size, codes.length);
+  for (const directory of ["public/flags", "dist/flags"]) {
+    assert.deepEqual(
+      readdirSync(resolve(root, directory)).sort(),
+      codes.map((code) => `${code}.svg`),
+    );
+  }
+  for (const code of codes) {
+    assert.match(code, /^[a-z]{2}$/);
+    const source = readFileSync(resolve(root, `public/flags/${code}.svg`));
+    assert.deepEqual(
+      readFileSync(resolve(root, `dist/flags/${code}.svg`)),
+      source,
+    );
+    assert.ok(source.length < 8 * 1024 ** 2);
+    assert.doesNotMatch(
+      source.toString(),
+      /<script\b|\bon\w+\s*=|(?:href|src)\s*=\s*["'](?:https?:|\/\/|data:|javascript:)/i,
+    );
+  }
+  const notices = readFileSync(
+    resolve(root, "THIRD_PARTY_NOTICES.txt"),
+    "utf8",
+  );
+  assert.match(notices, /flag-icons 7\.5\.0/);
+  assert.match(notices, /Copyright \(c\) 2013 Panayiotis Lipiridis/);
+  assert.match(notices, /Permission is hereby granted/);
+});
 
 test("Theme manifest meets required Hub fields", () => {
   for (const key of [

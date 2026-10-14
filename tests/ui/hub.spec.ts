@@ -1,5 +1,55 @@
 import { test, expect, type Page, type WebSocketRoute } from "@playwright/test";
 import { gzipSync } from "node:zlib";
+import flagCodes from "../../src/flag-codes.json" with { type: "json" };
+
+test("every bundled flag is valid SVG and decodes in the browser", async ({
+  page,
+}) => {
+  await hub(page);
+  await page.goto("/");
+  const failures = await page.evaluate(
+    async (codes) => {
+      const results = await Promise.all(
+        codes.map(async (code) => {
+          const url = `/flags/${code}.svg`;
+          const response = await fetch(url);
+          const xml = new DOMParser().parseFromString(
+            await response.text(),
+            "image/svg+xml",
+          );
+          if (
+            !response.ok ||
+            xml.querySelector("parsererror") ||
+            xml.documentElement.localName !== "svg"
+          )
+            return code;
+          const image = new Image();
+          image.src = url;
+          try {
+            await image.decode();
+          } catch {
+            return code;
+          }
+          return image.naturalWidth > 0 && image.naturalHeight > 0
+            ? null
+            : code;
+        }),
+      );
+      return results.filter(Boolean);
+    },
+    [...flagCodes.iso, ...flagCodes.extra],
+  );
+  expect(failures).toEqual([]);
+});
+
+test("unsupported region codes retain a safe text fallback", async ({
+  page,
+}) => {
+  await hub(page, { nodes: [{ ...node, country: "ZZ" }] });
+  await page.goto("/");
+  await expect(page.locator(".node-title .flag-fallback")).toHaveText("ZZ");
+  await expect(page.locator('img[src="/flags/zz.svg"]')).toHaveCount(0);
+});
 const metrics = {
   cpu: 33,
   uptime: 9000,
@@ -526,6 +576,26 @@ for (const layout of ["desktop", "compact", "mobile"]) {
     expect(Math.abs(failed - loaded)).toBeLessThanOrEqual(1);
   });
 }
+
+test("Iceland flag renders in sidebar, card and node details", async ({
+  page,
+}) => {
+  await hub(page, { nodes: [{ ...node, country: "IS" }] });
+  await page.goto("/");
+  for (const selector of [".tree-flag", ".title-flag"]) {
+    const flag = page.locator(`img${selector}[src="/flags/is.svg"]`);
+    await expect(flag).toHaveCount(1);
+    await expect
+      .poll(() => flag.evaluate((img: HTMLImageElement) => img.naturalWidth))
+      .toBeGreaterThan(0);
+  }
+  await page.goto("/#/node/1");
+  const flag = page.locator('.detail-header img[src="/flags/is.svg"]');
+  await expect(flag).toHaveCount(1);
+  await expect
+    .poll(() => flag.evaluate((img: HTMLImageElement) => img.naturalWidth))
+    .toBeGreaterThan(0);
+});
 
 test("region names stay consistent across sidebar cards and details", async ({
   page,

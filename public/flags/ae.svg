@@ -1,1 +1,6 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 48" width="72" height="48"><rect x="0" y="0" width="72" height="48" fill="#ff0000"/><rect x="18" y="0" width="54" height="16" fill="#00732f"/><rect x="18" y="16" width="54" height="16" fill="white"/><rect x="18" y="32" width="54" height="16" fill="#000"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" id="flag-icons-ae" viewBox="0 0 640 480">
+  <path fill="#00732f" d="M0 0h640v160H0z"/>
+  <path fill="#fff" d="M0 160h640v160H0z"/>
+  <path fill="#000001" d="M0 320h640v160H0z"/>
+  <path fill="red" d="M0 0h220v480H0z"/>
+</svg>

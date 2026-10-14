@@ -1239,7 +1239,7 @@ button:disabled {
 .hero-flag,
 .detail-flag {
   display: inline-block;
-  object-fit: cover;
+  object-fit: contain;
   flex: none;
   aspect-ratio: 3/2;
   border: 1px solid #868b83;

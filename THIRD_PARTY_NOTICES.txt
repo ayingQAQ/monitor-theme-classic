@@ -1,8 +1,32 @@
-Monitor Classic 1.0.9 has no external JavaScript libraries, fonts or icon services at runtime.
+Monitor Classic 1.0.10 uses no external JavaScript libraries, fonts or icon services at runtime.
 System fonts and platform emoji are supplied by the visitor's device.
-The interface, bundled SVG flags and charts are distributed under the repository MIT license.
+The interface and charts are distributed under the repository MIT license.
 No Microsoft proprietary image assets are included.
 Development tools and their licenses are documented in THIRD_PARTY.md and package-lock.json.
 
+Bundled country/region flags: flag-icons 7.5.0
+Source: https://github.com/lipis/flag-icons/tree/v7.5.0/flags/4x3
+Archive: https://registry.npmjs.org/flag-icons/-/flag-icons-7.5.0.tgz
+Archive SHA-256: c0b80bf0e08006a60f56621d6bc49f8c7131f4d1fef6737a165a673431f4b518
 
+The MIT License (MIT)
 
+Copyright (c) 2013 Panayiotis Lipiridis
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies
+of the Software, and to permit persons to whom the Software is furnished to do
+so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.

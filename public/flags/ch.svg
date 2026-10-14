@@ -1,1 +1,9 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 48" width="72" height="48"><rect x="0" y="0" width="72" height="48" fill="#da291c"/><rect x="31" y="10" width="10" height="28" fill="#fff"/><rect x="22" y="19" width="28" height="10" fill="#fff"/></svg>
+<svg xmlns="http://www.w3.org/2000/svg" id="flag-icons-ch" viewBox="0 0 640 480">
+  <g fill-rule="evenodd" stroke-width="1pt">
+    <path fill="red" d="M0 0h640v480H0z"/>
+    <g fill="#fff">
+      <path d="M170 195h300v90H170z"/>
+      <path d="M275 90h90v300h-90z"/>
+    </g>
+  </g>
+</svg>

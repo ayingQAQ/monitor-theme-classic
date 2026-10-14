@@ -24,6 +24,7 @@ import {
 } from "./format.js";
 import { chartSvg, chartFromHistory, demoChart } from "./chart.js";
 import { updateMarkup } from "./dom.js";
+import flagCodes from "./flag-codes.json";
 const root = document.getElementById("app")!;
 const buildVersion =
   document.querySelector<HTMLMetaElement>(
@@ -125,11 +126,7 @@ function buttonIcon(type: string): string {
 }
 
 // Self-contained flag SVGs prevent Windows from rendering regional flags as letter pairs.
-const bundledFlags = new Set(
-  "jp de fr it ie be nl ru at pl ua id sg vn ch cn hk tw kr us gb ca se fi no dk ae th es in tr il aq".split(
-    " ",
-  ),
-);
+const bundledFlags = new Set([...flagCodes.iso, ...flagCodes.extra]);
 function flagImage(code?: string, klass = "node-flag"): string {
   const c = typeof code === "string" ? code.toLowerCase() : "";
   if (bundledFlags.has(c))
