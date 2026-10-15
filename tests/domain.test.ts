@@ -4,7 +4,29 @@ import { nodeState, age, expDays, speed, locationName } from "../src/format.ts";
 import { sanitizeNodes, getMe } from "../src/api.ts";
 import { chartSvg, chartFromHistory } from "../src/chart.ts";
 import { loadConfig, defaults } from "../src/config.ts";
+import { warningReasons } from "../src/format.ts";
 const base = { id: 1, name: "Node", online: true };
+test("warning reasons explain load and expiry using the existing thresholds", () => {
+  const metrics = {
+    cpu: 90,
+    uptime: 1,
+    mem_used: 90,
+    mem_total: 100,
+    disk_used: 90,
+    disk_total: 100,
+  };
+  assert.deepEqual(warningReasons({ ...base, metrics, expires_in: 4 }), []);
+  assert.deepEqual(
+    warningReasons({
+      ...base,
+      metrics: { ...metrics, cpu: 95, mem_used: 99, disk_used: 92 },
+      expires_in: -3,
+    }),
+    ["CPU 95%", "内存 99%", "硬盘 92%", "已过期 3 天"],
+  );
+  assert.deepEqual(warningReasons({ ...base, expires_in: 0 }), ["今天到期"]);
+  assert.deepEqual(warningReasons({ ...base, expires_in: 3 }), ["3 天后到期"]);
+});
 test("historical timestamps outside Date's range do not crash chart rendering", () => {
   const markup = chartSvg([20], "CPU", 280, 90, { timestamps: [1e100] });
   assert.ok(markup.includes("时间未知"));

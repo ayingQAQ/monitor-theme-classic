@@ -76,15 +76,29 @@ export function nodeState(
   if (!n.online) return "offline";
   if (n.metrics === null || n.metrics === undefined) return "pending";
   if (!isMetricGood(n.metrics)) return "invalid";
-  const d = expDays(n);
-  if (
-    (cpuValue(n) ?? 0) > 90 ||
-    (ramValue(n) ?? 0) > 90 ||
-    (diskValue(n) ?? 0) > 90 ||
-    (d !== null && d <= 3)
-  )
-    return "warning";
+  if (warningReasons(n).length) return "warning";
   return "online";
+}
+export function warningReasons(n: NodeInfo): string[] {
+  const reasons: string[] = [];
+  for (const [name, value] of [
+    ["CPU", cpuValue(n)],
+    ["内存", ramValue(n)],
+    ["硬盘", diskValue(n)],
+  ] as const) {
+    if (value !== null && value > 90)
+      reasons.push(`${name} ${fmtPercent(value)}`);
+  }
+  const days = expDays(n);
+  if (days !== null && days <= 3)
+    reasons.push(
+      days < 0
+        ? `已过期 ${Math.abs(days)} 天`
+        : days === 0
+          ? "今天到期"
+          : `${days} 天后到期`,
+    );
+  return reasons;
 }
 export function isMetricGood(m: Metrics | null | undefined): boolean {
   if (!m) return false;

@@ -70,6 +70,71 @@ const node = {
   last_seen_ago: 5,
   expires_in: 20,
 };
+
+for (const width of [390, 1920]) {
+  test(`offline and warning cards have explicit themed signals at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 1000 });
+    const backend = await hub(page, {
+      nodes: [
+        { ...node, online: false, last_seen_ago: 18000 },
+        {
+          ...node,
+          id: 2,
+          name: "Hot node",
+          metrics: { ...metrics, cpu: 95 },
+          expires_in: 2,
+        },
+        { ...node, id: 3, name: "Healthy node" },
+      ],
+    });
+    await page.goto("/");
+    const offline = page.locator('.node-window[data-node="1"]');
+    const warning = page.locator('.node-window[data-node="2"]');
+    await expect(offline).toHaveAttribute("data-state", "offline");
+    await expect(offline.locator(".online-label")).toHaveText("离线");
+    await expect(offline.locator(".status-symbol")).toHaveCount(1);
+    await expect(offline.locator(".node-note")).toContainText(
+      "节点离线 · 最后上报：5小时0分钟前",
+    );
+    await expect(warning).toHaveClass(/card-warning/);
+    await expect(warning.locator(".node-note")).toHaveText(
+      "告警：CPU 95% · 2 天后到期",
+    );
+    await expect(warning.locator(".status-symbol")).toHaveCount(1);
+    const height = (await offline.boundingBox())!.height;
+    expect(
+      Math.abs(height - (await warning.boundingBox())!.height),
+    ).toBeLessThanOrEqual(1);
+    await expect(page.locator(".node-window .graph")).toHaveCount(3);
+    await page.screenshot({ path: test.info().outputPath("status-cards.png") });
+    await page.goto("/#/node/2");
+    await expect(page.locator(".detail-status-note.warning")).toHaveText(
+      "告警：CPU 95% · 2 天后到期",
+    );
+    await page.goto("/#/node/1");
+    await expect(page.locator(".detail-status-note.offline")).toContainText(
+      "节点离线",
+    );
+    await page.goto("/");
+    backend.socket()!.send(
+      JSON.stringify({
+        nodes: [
+          node,
+          { ...node, id: 2, name: "Hot node" },
+          { ...node, id: 3, name: "Healthy node" },
+        ],
+      }),
+    );
+    await expect(offline).toHaveAttribute("data-state", "online");
+    await expect(warning).not.toHaveClass(/card-warning/);
+    await expect(offline.locator(".node-note")).not.toContainText("节点离线");
+    expect(
+      Math.abs(height - (await offline.boundingBox())!.height),
+    ).toBeLessThanOrEqual(1);
+  });
+}
 test("a fully timed-out last probe cannot hide other successful carrier curves", async ({
   page,
 }) => {

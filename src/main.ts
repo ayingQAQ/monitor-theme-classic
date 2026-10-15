@@ -21,6 +21,7 @@ import {
   ramValue,
   speed,
   valid,
+  warningReasons,
 } from "./format.js";
 import { chartSvg, chartFromHistory, demoChart } from "./chart.js";
 import { updateMarkup } from "./dom.js";
@@ -143,6 +144,25 @@ const stateZh = (status: string) =>
         : status === "invalid"
           ? "指标异常"
           : "离线";
+function statusMark(status: string): string {
+  if (status === "offline" || status === "invalid")
+    return '<svg class="status-symbol status-error" viewBox="0 0 16 16" aria-hidden="true"><path fill="#b52b24" stroke="#65201c" d="M1.5 1.5h13v13h-13z"/><path stroke="#fff" stroke-width="2" d="m5 5 6 6m0-6-6 6"/></svg>';
+  if (status === "warning")
+    return '<svg class="status-symbol status-caution" viewBox="0 0 16 16" aria-hidden="true"><path fill="#ffd75b" stroke="#654b10" d="m8 1 7 13H1z"/><path stroke="#241b0c" stroke-width="2" d="M8 5v4m0 1v2"/></svg>';
+  return `<span class="status-dot ${status}"></span>`;
+}
+function statusNote(n: NodeInfo): string {
+  const status = nodeState(n);
+  return status === "offline"
+    ? `节点离线 · 最后上报：${age(n)}`
+    : status === "warning"
+      ? `告警：${warningReasons(n).join(" · ")}`
+      : status === "pending"
+        ? "等待首次指标上报"
+        : status === "invalid"
+          ? "上报指标不完整或格式异常"
+          : "";
+}
 function detailId(): number | null {
   const m = location.hash.match(/^#\/node\/(\d+)$/);
   return m && Number.isSafeInteger(Number(m[1])) ? Number(m[1]) : null;
@@ -384,16 +404,9 @@ function nodeCard(n: NodeInfo) {
     rm = ramValue(n),
     dk = diskValue(n);
   const isMin = minimized.has(n.id);
-  const note =
-    status === "offline"
-      ? "最后上报：" + age(n)
-      : status === "pending"
-        ? "等待首次指标上报"
-        : status === "invalid"
-          ? "上报指标不完整或格式异常"
-          : "";
+  const note = statusNote(n);
   const expires = expDays(n);
-  return `<article class="node-window ${status === "offline" ? "card-offline" : ""} ${view === "compact" ? "card-compact" : ""}" data-node="${n.id}" tabindex="0" aria-label="查看 ${html(n.name)} 的节点详情">
+  return `<article class="node-window card-${status} ${view === "compact" ? "card-compact" : ""}" data-node="${n.id}" data-state="${status}" tabindex="0" aria-label="${stateZh(status)}，查看 ${html(n.name)} 的节点详情">
     <div class="node-title classic-title"><span class="tiny-pc">${flagImage(n.country, "title-flag")}</span><span class="truncate" title="${html(n.name)}">${html(n.name)}</span><div class="window-actions">
       <button class="title-btn" data-action="min" data-id="${n.id}" title="${isMin ? "还原" : "最小化"}" aria-label="${isMin ? "还原" : "最小化"} ${html(n.name)}"><span class="window-glyph ${isMin ? "glyph-restore" : "glyph-min"}" aria-hidden="true"></span></button>
       <button class="title-btn" data-action="detail" data-id="${n.id}" title="查看节点详情" aria-label="查看 ${html(n.name)} 详情"><span class="window-glyph glyph-max" aria-hidden="true"></span></button>
@@ -403,7 +416,7 @@ function nodeCard(n: NodeInfo) {
       isMin
         ? ""
         : `<div class="node-body" data-key="node-body-${n.id}">
-      <div class="node-identity"><div class="identity-text"><strong>${html(locationName(n.country))}</strong><div class="country-label" title="${html(n.group || "未分组")}">${html(n.group || "未分组")} · #${String(n.id).padStart(2, "0")}</div></div><div class="online-label ${status}"><span class="status-dot ${status}"></span>${stateZh(status)}</div></div>
+      <div class="node-identity"><div class="identity-text"><strong>${html(locationName(n.country))}</strong><div class="country-label" title="${html(n.group || "未分组")}">${html(n.group || "未分组")} · #${String(n.id).padStart(2, "0")}</div></div><div class="online-label ${status}">${statusMark(status)}${stateZh(status)}</div></div>
       <div class="node-note ${note ? "state-note" : ""}" title="${html(note || n.public_remark || "")}">${html(note || n.public_remark || "实时资源监控")}</div>
       <div class="bevel-line"></div>
       <div class="meters">${meter("CPU", cp)}${meter("内存", rm, valid(n.metrics?.mem_used) ? bytes(n.metrics!.mem_used) : undefined)}${meter("硬盘", dk)}${config.show_traffic ? trafficMeter(n) : ""}</div>
@@ -592,7 +605,7 @@ function renderNodePage(node: NodeInfo | undefined, id: number): string {
     .join("")}</div>`;
   let content = "";
   if (detailTab === "overview") {
-    content = `<div class="detail-columns">${detailPanel("当前状态", `<div class="detail-banner"><span class="status-dot ${st}"></span><strong>${stateZh(st)}</strong> · ${html(locationName(node.country))}</div>${meterGrid}${detailHistory(node)}`)}
+    content = `<div class="detail-columns">${detailPanel("当前状态", `<div class="detail-banner ${st}">${statusMark(st)}<strong>${stateZh(st)}</strong> · ${html(locationName(node.country))}</div>${meterGrid}${detailHistory(node)}`)}
     ${detailPanel("节点摘要", grouped(["名称", node.name], ["节点编号", node.id], ["国家/地区", locationName(node.country)], ["分组", node.group || "未分组"], ["在线时间", duration(m?.uptime)], ["延迟", pingText(node)], ["最近上报", age(node)], ["备注", node.public_remark || "—"]))}</div>`;
   } else if (detailTab === "performance") {
     const c = cachedHistory(node.id);
@@ -634,7 +647,7 @@ function renderNodePage(node: NodeInfo | undefined, id: number): string {
   }
   return `<main class="content node-page" id="main-content" tabindex="-1"><div class="detail-toolbar classic-title">${scopeIcon()}${flagImage(node.country, "title-flag")}<span>${html(node.name)} · 属性</span><button class="title-btn" data-action="back" title="返回节点列表" aria-label="返回节点列表">×</button></div>
     <div class="detail-inner"><div class="detail-navigation"><button class="classic-button" data-action="back">← 返回节点列表</button><span>节点属性 / ${html(node.name)}</span></div>
-    <div class="detail-header">${flagImage(node.country, "detail-flag")}<div><h1>${html(node.name)}</h1><p><span class="status-dot ${st}"></span> ${stateZh(st)} · ${html(locationName(node.country))} · #${node.id}</p></div></div>
+    <div class="detail-header">${flagImage(node.country, "detail-flag")}<div><h1>${html(node.name)}</h1><p>${statusMark(st)} <strong>${stateZh(st)}</strong> · ${html(locationName(node.country))} · #${node.id}</p>${statusNote(node) ? `<p class="detail-status-note ${st}">${html(statusNote(node))}</p>` : ""}</div></div>
     ${error ? `<div class="error-banner" role="alert">${html(error)} <button data-action="refresh">重试</button></div>` : ""}
     <div class="history-controls"><span>历史范围</span><select id="history-range" aria-label="历史范围">${historyWindows()
       .map(
