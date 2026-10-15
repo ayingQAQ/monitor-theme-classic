@@ -968,7 +968,7 @@ button:disabled {
   color: #74756e;
 }
 .fact strong {
-  font: 11px var(--mono);
+  font: 11px/1.3 var(--mono);
   font-weight: normal;
   text-align: left;
   white-space: nowrap;
@@ -2619,6 +2619,7 @@ button:disabled {
 }
 .node-window .graph-caption {
   font-size: 14px;
+  line-height: 1.4;
 }
 .node-window .graph-time,
 .node-window .graph-scale,

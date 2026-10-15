@@ -2,7 +2,7 @@
 
 面向 [Monitor](https://github.com/monitor-probe/monitor) Hub 的独立中文主题，采用 Windows 95/2000 控制台风格：蓝色标题栏、立体边框、资源进度条、性能曲线与可折叠导航树。
 
-[下载 v1.0.11](https://github.com/ayingQAQ/monitor-theme-classic/releases/tag/v1.0.11) · [官方主题规范](https://monitor-document.pages.dev/dev/theme) · [主题收录要求](https://github.com/monitor-probe/themes#收录你的主题)
+[下载 v1.0.12](https://github.com/ayingQAQ/monitor-theme-classic/releases/tag/v1.0.12) · [官方主题规范](https://monitor-document.pages.dev/dev/theme) · [主题收录要求](https://github.com/monitor-probe/themes#收录你的主题)
 
 ![Monitor Classic 桌面预览，1920×1200](preview.png)
 
@@ -18,7 +18,7 @@ https://github.com/ayingQAQ/monitor-theme-classic
 
 页面入口为 `/`，节点详情为 `/#/node/{id}`，采用 hash 路由，不需要额外放行服务器路径；`/admin` 由 Hub 后台处理。
 
-- 主题名称：`Monitor Classic`；短名：`monitor-classic`；版本：`1.0.11`。
+- 主题名称：`Monitor Classic`；短名：`monitor-classic`；版本：`1.0.12`。
 - 后续更新从清单 `url` 指向的仓库读取最新正式 Release。
 - 开发阶段的 `x86-monitor` 使用不同短名，请安装新的 `monitor-classic`，不会自动覆盖旧主题。
 - 登录、节点管理和探测任务由 Hub 后台提供。
@@ -61,7 +61,7 @@ sha256sum -c theme.tar.gz.sha256
 
 ## 发布与收录
 
-公开仓库根目录提供 MIT `LICENSE`；清单 `url` 指向本仓库；版本 `1.0.11` 对应 `v1.0.11` tag。正式 Release 附件为 `theme.tar.gz` 与 `theme.tar.gz.sha256`，包内含 `preview.png`。
+公开仓库根目录提供 MIT `LICENSE`；清单 `url` 指向本仓库；版本 `1.0.12` 对应 `v1.0.12` tag。正式 Release 附件为 `theme.tar.gz` 与 `theme.tar.gz.sha256`，包内含 `preview.png`。
 
 按 [主题列表 README](https://github.com/monitor-probe/themes#收录你的主题) 申请收录时，只在 `themes.txt` 末尾增加本仓库地址；名称、简介、作者、版本和截图从最新正式 Release 读取。官方 PR 检查会将包安装进最新版 Hub。
 
